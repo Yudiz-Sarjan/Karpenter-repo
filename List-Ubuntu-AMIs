@@ -1,0 +1,6 @@
+aws ec2 describe-images \
+    --owners 099720109477 \
+    --filters "Name=name,Values=ubuntu-*64-gp2" \
+    --query "Images[*].[ImageId,Name]" \
+    --region <Region-name> \
+    --output table
