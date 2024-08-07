@@ -12,5 +12,5 @@ spec:
     - tags:
         karpenter.sh/discovery: "<CLUSTER-NAME>" # replace with your cluster name
   amiSelectorTerms:
-    - id: "ami-0a5fca6a0f9b03121"
-    - id: "ami-0eb4c2590f6f3d923"
+    - id: "ami-033e03ec486b5d22f"
+    - id: "ami-0e4bab9adfcf464b1"
