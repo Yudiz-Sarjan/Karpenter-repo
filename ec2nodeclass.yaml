@@ -11,6 +11,3 @@ spec:
   securityGroupSelectorTerms:
     - tags:
         karpenter.sh/discovery: "<CLUSTER-NAME>" # replace with your cluster name
-  amiSelectorTerms:
-    - id: "ami-033e03ec486b5d22f"
-    - id: "ami-0e4bab9adfcf464b1"
