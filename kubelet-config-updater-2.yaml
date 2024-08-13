@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kubelet-config-updater
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: kubelet-config-updater
+  template:
+    metadata:
+      labels:
+        app: kubelet-config-updater
+    spec:
+      containers:
+      - name: kubelet-config-updater
+        image: alpine:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            apk add --no-cache jq
+            CONFIG_FILE="/etc/kubernetes/kubelet/kubelet-config.json"
+            if [ -f "$CONFIG_FILE" ]; then
+              cp $CONFIG_FILE ${CONFIG_FILE}.bak
+              jq '. + { "imageGCHighThresholdPercent": 80, "imageGCLowThresholdPercent": 40 }' $CONFIG_FILE > ${CONFIG_FILE}.tmp
+              mv ${CONFIG_FILE}.tmp $CONFIG_FILE
+              echo "Config updated successfully"
+            else
+              echo "$CONFIG_FILE does not exist"
+              exit 1
+            fi
+            sleep infinity
+        volumeMounts:
+        - name: kubelet-config
+          mountPath: /etc/kubernetes/kubelet
+      volumes:
+      - name: kubelet-config
+        hostPath:
+          path: /etc/kubernetes/kubelet
+      nodeSelector:
+        kubernetes.io/os: linux
+      restartPolicy: Always
