@@ -1,0 +1,41 @@
+apiVersion: karpenter.k8s.aws/v1beta1
+kind: EC2NodeClass
+metadata:
+  name: custom-ec2nodeclass
+spec:
+  amiFamily: AL2
+  role: "KarpenterNodeRole-eks-karpenter"
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: eks-karpenter
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: eks-karpenter
+  userData: |
+    #!/bin/bash
+    /etc/eks/bootstrap.sh 'eks-karpenter'
+
+    # Install jq to process JSON
+    sudo yum install -y jq
+
+    # Ensure Kubelet configuration directory exists
+    mkdir -p /etc/kubernetes/kubelet
+
+    # Create a backup of the existing Kubelet configuration
+    cp /etc/kubernetes/kubelet/kubelet-config.json /etc/kubernetes/kubelet/kubelet-config.json.bak
+
+    # Update the Kubelet configuration with the required settings
+    jq '. + {"imageGCHighThresholdPercent": 80, "imageGCLowThresholdPercent": 40}' /etc/kubernetes/kubelet/kubelet-config.json.bak > /etc/kubernetes/kubelet/kubelet-config.json
+
+    # Restart Kubelet service
+    sudo systemctl restart kubelet
+
+    # Check if Kubelet restart was successful
+    if systemctl is-active --quiet kubelet; then
+        echo "Kubelet service restarted successfully" >> /var/log/user-data.log
+    else
+        echo "Kubelet service failed to restart" >> /var/log/user-data.log
+    fi
+
+    # Check the status of Kubelet service
+    systemctl status kubelet >> /var/log/user-data.log 2>&1
